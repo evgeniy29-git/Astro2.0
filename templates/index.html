@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant</title>
+    <style>
+        /* Стили для темной темы */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #chatbox {
+            width: 100%;
+            max-width: 600px;
+            height: 80vh;
+            margin: auto;
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .message.user {
+            align-self: flex-end;
+            background-color: #007bff;
+            color: #fff;
+        }
+        .message.bot {
+            align-self: flex-start;
+            background-color: #333;
+            color: #e0e0e0;
+        }
+        #inputArea {
+            display: flex;
+            align-items: center;
+        }
+        #inputField {
+            flex: 1;
+            padding: 10px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+            background-color: #333;
+            color: #e0e0e0;
+        }
+        #sendButton, #voiceButton {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-left: 10px;
+        }
+        #sendButton:hover, #voiceButton:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div id="chatbox">
+        <div id="messages"></div>
+        <div id="inputArea">
+            <input type="text" id="inputField" placeholder="Введите сообщение..."/>
+            <button id="sendButton">Отправить</button>
+            <button id="voiceButton">🎙️</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('sendButton').addEventListener('click', function() {
+            let message = document.getElementById('inputField').value;
+            document.getElementById('inputField').value = '';
+            let messageElement = document.createElement('div');
+            messageElement.classList.add('message', 'user');
+            messageElement.textContent = message;
+            document.getElementById('messages').appendChild(messageElement);
+
+            fetch('/send_message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                let responseElement = document.createElement('div');
+                responseElement.classList.add('message', 'bot');
+                responseElement.textContent = data.response;
+                document.getElementById('messages').appendChild(responseElement);
+                document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+            });
+        });
+
+        document.getElementById('voiceButton').addEventListener('click', function() {
+            fetch('/listen_voice_input', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                let message = data.message;
+                let messageElement = document.createElement('div');
+                messageElement.classList.add('message', 'user');
+                messageElement.textContent = message;
+                document.getElementById('messages').appendChild(messageElement);
+
+                fetch('/send_message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    let responseElement = document.createElement('div');
+                    responseElement.classList.add('message', 'bot');
+                    responseElement.textContent = data.response;
+                    document.getElementById('messages').appendChild(responseElement);
+                    document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
